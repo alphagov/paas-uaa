@@ -8,10 +8,7 @@ import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
 import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -117,6 +114,24 @@ public class TokenValidationServiceTest {
     public void validationFails_whenClientNotFound() {
         expectedException.expect(InvalidTokenException.class);
         expectedException.expectMessage("Invalid client ID "+clientId);
+
+        when(mockMultitenantClientServices.loadClientByClientId(clientId, IdentityZoneHolder.get().getId())).thenThrow(NoSuchClientException.class);
+        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+
+        tokenValidationService.validateToken(accessToken, true);
+    }
+
+    @Test
+    public void validationFails_whenIssuerDoesNotMatchTokenEndPointExactly() {
+        String tokenEndpoint = "https://token.endpoint";
+        String issuer = tokenEndpoint + "/does/not/match";
+
+        when(tokenEndpointBuilder.getTokenEndpoint()).thenReturn(tokenEndpoint);
+
+        expectedException.expect(InvalidTokenException.class);
+        expectedException.expectMessage("Invalid issuer (" + issuer + ") for token did not match expected: " + tokenEndpoint);
+
+        content.put(ISS, issuer);
 
         when(mockMultitenantClientServices.loadClientByClientId(clientId, IdentityZoneHolder.get().getId())).thenThrow(NoSuchClientException.class);
         String accessToken = UaaTokenUtils.constructToken(header, content, signer);

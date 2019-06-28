@@ -14,11 +14,7 @@ package org.cloudfoundry.identity.uaa.provider.oauth;
 
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.login.Prompt;
-import org.cloudfoundry.identity.uaa.provider.AbstractXOAuthIdentityProviderDefinition;
-import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
-import org.cloudfoundry.identity.uaa.provider.IdentityProviderWrapper;
-import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
-import org.cloudfoundry.identity.uaa.provider.RawXOAuthIdentityProviderDefinition;
+import org.cloudfoundry.identity.uaa.provider.*;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 
 import java.net.MalformedURLException;
@@ -109,6 +105,18 @@ public class OauthIDPWrapperFactoryBean {
         idpDefinition.setSkipSslValidation(idpDefinitionMap.get("skipSslValidation") == null ? false : (boolean) idpDefinitionMap.get("skipSslValidation"));
         idpDefinition.setTokenKey((String) idpDefinitionMap.get("tokenKey"));
         idpDefinition.setIssuer((String) idpDefinitionMap.get("issuer"));
+
+        XOAuthIssuerValidationMode issuerValidationMode = XOAuthIssuerValidationMode.STRICT;
+        String issuerValidationModeText = (String)idpDefinitionMap.get("issuerValidationMode");
+        if (hasText(issuerValidationModeText)) {
+            try {
+                issuerValidationMode = XOAuthIssuerValidationMode.valueOf(issuerValidationModeText.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("issuer validation mode is malformed.", e);
+            }
+        }
+        idpDefinition.setIssuerValidationMode(issuerValidationMode);
+
         idpDefinition.setAttributeMappings((Map<String, Object>) idpDefinitionMap.get(ATTRIBUTE_MAPPINGS));
         idpDefinition.setScopes((List<String>) idpDefinitionMap.get("scopes"));
         String responseType = (String) idpDefinitionMap.get("responseType");
