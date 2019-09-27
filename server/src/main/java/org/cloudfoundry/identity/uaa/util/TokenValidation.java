@@ -417,7 +417,7 @@ public abstract class TokenValidation {
                 RevocableToken revocableToken = null;
                 try {
                     revocableToken = revocableTokenProvisioning.retrieve(tokenId, IdentityZoneHolder.get().getId());
-                } catch (EmptyResultDataAccessException ex) {
+                } catch (EmptyResultDataAccessException ignored) {
                 }
 
                 if (revocableToken == null) {
